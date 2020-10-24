@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title></title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="script.js"></script>
+</head>
+
+<body>
+  <div class="search-overlay"></div>
+  <div class="scroll-cont">
+    <div class="content">
+      <div class="search">
+        <div class="search__bg"></div>
+        <div class="search__box">
+          <input type="text" class="search__input" placeholder="Search" />
+          <div class="search__line"></div>
+          <div class="search__close"></div>
+        </div>
+      </div>
+      <p class="desc">This search input should work with any position/layout type, including normal pages with scroll.
+        Just don't override .s--cloned styles for .search and everything will be okay. Requires specific styles for
+        containers (check html+body and .scroll-cont styles) and .search-overlay element to be placed in the root.</p>
+    </div>
+  </div>
+  <script type="text/javascript">
+    (function () {
+      var $searchOverlay = document.querySelector(".search-overlay");
+      var $search = document.querySelector(".search");
+      var $clone, offsetX, offsetY;
+
+      $search.addEventListener("click", function () {
+        var $original = this;
+        $clone = this.cloneNode(true);
+
+        $searchOverlay.classList.add("s--active");
+
+        $clone.classList.add("s--cloned", "s--hidden");
+        $searchOverlay.appendChild($clone);
+
+        var triggerLayout = $searchOverlay.offsetTop;
+
+        var originalRect = $original.getBoundingClientRect();
+        var cloneRect = $clone.getBoundingClientRect();
+
+        offsetX = originalRect.left - cloneRect.left;
+        offsetY = originalRect.top - cloneRect.top;
+
+        $clone.style.transform = "translate(" + offsetX + "px, " + offsetY + "px)";
+        $original.classList.add("s--hidden");
+        $clone.classList.remove("s--hidden");
+
+        var triggerLayout = $searchOverlay.offsetTop;
+
+        $clone.classList.add("s--moving");
+
+        $clone.setAttribute("style", "");
+
+        $clone.addEventListener("transitionend", openAfterMove);
+      });
+
+      function openAfterMove() {
+        $clone.classList.add("s--active");
+        $clone.querySelector("input").focus();
+
+        addCloseHandler($clone);
+        $clone.removeEventListener("transitionend", openAfterMove);
+      };
+
+      function addCloseHandler($parent) {
+        var $closeBtn = $parent.querySelector(".search__close");
+        $closeBtn.addEventListener("click", closeHandler);
+      };
+
+      /* close handler functions */
+      function closeHandler(e) {
+        $clone.classList.remove("s--active");
+        e.stopPropagation();
+
+        var $cloneBg = $clone.querySelector(".search__bg");
+
+        $cloneBg.addEventListener("transitionend", moveAfterClose);
+      };
+
+      function moveAfterClose(e) {
+        e.stopPropagation(); // prevents from double transitionend even fire on parent $clone
+
+        $clone.classList.add("s--moving");
+        $clone.style.transform = "translate(" + offsetX + "px, " + offsetY + "px)";
+        $clone.addEventListener("transitionend", terminateSearch);
+      };
+
+      function terminateSearch(e) {
+        $search.classList.remove("s--hidden");
+        $clone.remove();
+        $searchOverlay.classList.remove("s--active");
+      };
+    }());
+  </script>
+</body>
+
+</html>
